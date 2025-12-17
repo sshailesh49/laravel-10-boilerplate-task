@@ -106,7 +106,7 @@ jobs:
       - name: Build & Push Image
         run: |
           TAG=${GITHUB_SHA::7}
-          docker build -f Docker/Dockerfile \
+          docker build -f Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:$TAG .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:$TAG
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
