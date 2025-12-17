@@ -130,11 +130,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region ${{ secrets.AWS_REGION }} \
-            --name ${{ secrets.EKS_CLUSTER_NAME }}
+      # - name: Update kubeconfig omitted for dry-run
 
       - name: Install Helm
         run: |
@@ -150,9 +146,9 @@ jobs:
             echo "ENV=prod" >> $GITHUB_ENV
           fi
 
-      - name: Helm Deploy
+      - name: Helm Dry Run (Template)
         run: |
-          helm upgrade --install laravel helm/laravel.app \
+          helm template laravel helm/laravel.app \
             -f helm/laravel.app/values-${ENV}.yaml \
             --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
             --set image.tag=${IMAGE_TAG}
