@@ -5,9 +5,10 @@ on:
     branches:
       - main
       - development
+      - staging
   push:
     branches:
-      - development
+      - development 
       - staging
       - main
 
