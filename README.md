@@ -1,5 +1,6 @@
 # Laravel 10 Boilerplate
 
+
 The goal of this project is to serve as a boilerplate for Laravel 10
 utilizing light-weight alpine linux images for nginx and php 8.2 (fpm).
 
