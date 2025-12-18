@@ -148,7 +148,12 @@ jobs:
 
       - name: Helm Deploy
         run: |
-          helm upgrade --install laravel helm/laravel.app \
-            -f helm/laravel.app/values-${ENV}.yaml \
-            --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
-            --set image.tag=${IMAGE_TAG}
+          # helm upgrade --install laravel helm/laravel.app \
+          #   -f helm/laravel.app/values-${ENV}.yaml \
+          #   --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
+          #   --set image.tag=${IMAGE_TAG}
+          helm template laravel helm/laravel.app \
+              -f helm/laravel.app/values-${ENV}.yaml \
+              --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
+              --set image.tag=${IMAGE_TAG}
+  
