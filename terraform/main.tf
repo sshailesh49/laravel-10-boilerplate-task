@@ -1,11 +1,4 @@
 ####################
-# AWS PROVIDER
-####################
-provider "aws" {
-  region = var.aws_region
-}
-
-####################
 # VPC MODULE
 ####################
 module "vpc" {
