@@ -46,7 +46,7 @@ terraform/
 * **IAM Module**
   Creates an IAM user with permissions limited to **EKS and ECR**, which is used by CI/CD for deployments.
 
-> ℹ️ Note: Creating actual AWS resources is optional as per the task instructions. The Terraform code is written as if a real EKS cluster and ECR repository exist.
+> Note: Creating actual AWS resources is optional as per the task instructions. The Terraform code is written as if a real EKS cluster and ECR repository exist.
 
 ### Terraform Commands
 
@@ -59,7 +59,7 @@ terraform plan
 
 ---
 
-## 🐳 Docker Setup
+## Docker Setup
 
 A Dockerfile is provided to build the Laravel application image.
 
@@ -90,7 +90,7 @@ This starts the Laravel application and required services for local testing.
 
 ---
 
-## ⎈ Kubernetes Deployment – Helm
+## Kubernetes Deployment – Helm
 
 The application is deployed to Kubernetes using a Helm chart.
 
