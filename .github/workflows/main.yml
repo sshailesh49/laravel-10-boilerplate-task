@@ -2,9 +2,9 @@ name: CI-CD Pipeline
 
 on:
   pull_request:
-    branches: [test]
+    branches: [main, development, staging]
   push:
-    branches: [test]
+    branches: [main, development, staging]
 
 env:
   IMAGE_NAME: laravel-app
@@ -77,8 +77,6 @@ jobs:
             echo "TF_VAR_FILE=dev.tfvars" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
             echo "TF_VAR_FILE=staging.tfvars" >> $GITHUB_ENV
-          elif [[ "${GITHUB_REF_NAME}" == "test" ]]; then
-             echo "TF_VAR_FILE=dev.tfvars" >> $GITHUB_ENV
           else
             echo "TF_VAR_FILE=prod.tfvars" >> $GITHUB_ENV
           fi
@@ -137,7 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
-     # - terraform-apply
+      - terraform-apply
     if: github.event_name == 'push'
 
     steps:
@@ -181,13 +179,21 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "development" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
+            echo "CLUSTER_NAME=laravel-cluster-dev" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
             echo "ENV=staging" >> $GITHUB_ENV
+            echo "CLUSTER_NAME=laravel-cluster-staging" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF_NAME}" == "test" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
+            echo "CLUSTER_NAME=laravel-cluster-dev" >> $GITHUB_ENV
           else
             echo "ENV=prod" >> $GITHUB_ENV
+            echo "CLUSTER_NAME=laravel-cluster-prod" >> $GITHUB_ENV
           fi
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${{ secrets.AWS_REGION }}
 
       - name: Helm Dry Run
         run: |
