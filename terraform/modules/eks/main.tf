@@ -13,6 +13,14 @@ module "eks" {
   enable_irsa = true
   manage_aws_auth_configmap = true
 
+  aws_auth_roles = [
+    {
+      rolearn = aws_iam_role.github_actions.arn
+      username = "github"
+      groups   = ["system:masters"]
+    }
+  ]
+
   eks_managed_node_groups = {
     default = {
       desired_size = var.node_desired_size
