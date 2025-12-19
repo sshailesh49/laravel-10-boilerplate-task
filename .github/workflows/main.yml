@@ -132,6 +132,11 @@ jobs:
           cd terraform
           terraform apply tfplan
 
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform destroy 
+
 # =====================================================
 # 🏗 BUILD STAGE (APP)
 # =====================================================
