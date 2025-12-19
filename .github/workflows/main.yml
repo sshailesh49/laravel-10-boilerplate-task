@@ -132,10 +132,10 @@ jobs:
           cd terraform
           terraform apply tfplan
 
-      # - name: Terraform Apply
+      # - name: Terraform Destroy
       #   run: |
       #     cd terraform
-      #     terraform destroy 
+      #     terraform destroy --auto-approve
 
 # =====================================================
 # 🏗 BUILD STAGE (APP)
