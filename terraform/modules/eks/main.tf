@@ -8,6 +8,13 @@ module "eks" {
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
+  enable_irsa = true
+ 
+
+  #    manage_aws_auth_configmap = true  
+
   eks_managed_node_groups = {
     default = {
       desired_size = 2
