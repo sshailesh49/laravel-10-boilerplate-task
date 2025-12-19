@@ -1,4 +1,5 @@
 name: CI-CD Pipeline
+
 on:
   pull_request:
     branches: [main, development, staging]
@@ -9,7 +10,7 @@ env:
   IMAGE_NAME: laravel-app
 
 # =====================================================
-# 🔍 DETECT TERRAFORM CHANGES (PATH FILTER)
+#  DETECT TERRAFORM CHANGES (PATH FILTER)
 # =====================================================
 jobs:
   detect_changes:
@@ -29,7 +30,7 @@ jobs:
               - 'terraform/**'
 
 # =====================================================
-# 🧪 TEST STAGE
+#  TEST STAGE
 # =====================================================
   test:
     name: Laravel Tests
@@ -50,35 +51,45 @@ jobs:
           php artisan key:generate
       - run: php artisan test
 
-  # =========================
-  # 🌍 TERRAFORM STAGE
-  # =========================
-  terraform:
+# =====================================================
+#  TERRAFORM PLAN (ALL ENVS)
+# =====================================================
+  terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push'
+    needs: [test, detect_changes]
+    if: needs.detect_changes.outputs.changes == 'true'
 
     steps:
       - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 🔹 ENV → tfvars
+      - name: Select Terraform Variables
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "development" ]]; then
+            echo "TF_VAR_FILE=dev.tfvars" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF_NAME}" == "staging" ]]; then
+            echo "TF_VAR_FILE=staging.tfvars" >> $GITHUB_ENV
+          else
+            echo "TF_VAR_FILE=prod.tfvars" >> $GITHUB_ENV
+          fi
 
       - name: Terraform Init
         run: |
           cd terraform
-          terraform init -backend=false
-
-      - name: Terraform Validate
-        run: |
-          cd terraform
-          terraform validate
+          terraform init
 
       - name: Terraform Plan
         run: |
           cd terraform
-          terraform plan
+          terraform plan -var-file=${TF_VAR_FILE} -out=tfplan
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -87,7 +98,7 @@ jobs:
           path: terraform/tfplan
 
 # =====================================================
-# ✋ TERRAFORM APPLY (ONLY MAIN + PRODUCTION)
+#  TERRAFORM APPLY (ONLY MAIN + PRODUCTION)
 # =====================================================
   terraform-apply:
     name: Terraform Apply (Production)
@@ -100,6 +111,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -116,6 +132,11 @@ jobs:
           cd terraform
           terraform apply tfplan
 
+      # - name: Terraform Apply
+      #   run: |
+      #     cd terraform
+      #     terraform destroy 
+
 # =====================================================
 # 🏗 BUILD STAGE (APP)
 # =====================================================
@@ -124,12 +145,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
-      - terraform-apply
-    if: |
-      always() && 
-      needs.test.result == 'success' && 
-      (needs.terraform-apply.result == 'success' || needs.terraform-apply.result == 'skipped') &&
-      github.event_name == 'push'
+     # - terraform-apply
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
@@ -142,13 +159,12 @@ jobs:
       - name: Build & Push Image
         run: |
           TAG=${GITHUB_SHA::7}
-          docker build -f Docker/Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:$TAG .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:$TAG .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:$TAG
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
 
 # =====================================================
-# 🚀 DEPLOY STAGE (EKS)
+#  DEPLOY STAGE (EKS)
 # =====================================================
   deploy:
     name: Deploy to EKS
@@ -161,13 +177,9 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region ${{ secrets.AWS_REGION }} \
-            --name ${{ secrets.EKS_CLUSTER_NAME }}
 
       - name: Install Helm
         run: |
@@ -183,9 +195,20 @@ jobs:
             echo "ENV=prod" >> $GITHUB_ENV
           fi
 
-      - name: Helm Dry Run
+      # - name: Helm Dry Run
+      #   run: |
+      #     helm template laravel helm/laravel.app \
+      #       -f helm/laravel.app/values-${ENV}.yaml \
+      #       --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
+      #       --set image.tag=${IMAGE_TAG}
+
+      - name: Deploy to EKS with Helm
         run: |
           helm upgrade --install laravel helm/laravel.app \
-            -f helm/laravel.app/values-${ENV}.yaml \
-            --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
-            --set image.tag=${IMAGE_TAG}
+             -f helm/laravel.app/values-${ENV}.yaml \
+             --set image.repository=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME} \
+             --set image.tag=${IMAGE_TAG} \
+             --namespace laravel \
+             --create-namespace \
+             --wait \
+             --timeout 10m
