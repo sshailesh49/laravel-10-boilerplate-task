@@ -9,7 +9,7 @@ module "vpc" {
 }
 
 ####################
-# EKS MODULE  1 1
+# EKS MODULE  1 
 ####################
 module "eks" {
   source = "./modules/eks"
