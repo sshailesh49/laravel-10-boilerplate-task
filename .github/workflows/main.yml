@@ -127,10 +127,10 @@ jobs:
           cd terraform
           terraform init
 
-      # - name: Terraform Apply
-      #   run: |
-      #     cd terraform
-      #     terraform apply tfplan
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform apply tfplan
 
       # - name: Terraform Apply
       #   run: |
