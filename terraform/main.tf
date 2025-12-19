@@ -1,5 +1,5 @@
 ####################
-#  VPC MODULE 
+#  VPC MODULE  
 ####################
 module "vpc" {
   source = "./modules/vpc"
