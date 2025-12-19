@@ -10,11 +10,11 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      desired_size = 2
-      min_size     = 1
-      max_size     = 3
+      desired_size = var.node_desired_size
+      min_size     = var.node_min_size
+      max_size     = var.node_max_size
 
-      instance_types = ["t3.medium"]
+      instance_types = var.node_instance_types
     }
   }
 }
