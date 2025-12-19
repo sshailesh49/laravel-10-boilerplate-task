@@ -128,15 +128,15 @@ jobs:
           cd terraform
           terraform init
 
-      # - name: Terraform Apply
-      #   run: |
-      #     cd terraform
-      #     terraform apply tfplan
-
-      - name: Terraform Destroy
+      - name: Terraform Apply
         run: |
           cd terraform
-          terraform destroy --auto-approve
+          terraform apply tfplan
+
+      # - name: Terraform Destroy
+      #   run: |
+      #     cd terraform
+      #     terraform destroy --auto-approve
 # 
 
 
