@@ -1,5 +1,5 @@
 ####################
-#  VPC MODULE  
+#  VPC MODULE   
 ####################
 module "vpc" {
   source = "./modules/vpc"
@@ -9,7 +9,7 @@ module "vpc" {
 }
 
 ####################
-# EKS MODULE  1   
+# EKS MODULE  1 
 ####################
 module "eks" {
   source = "./modules/eks"
