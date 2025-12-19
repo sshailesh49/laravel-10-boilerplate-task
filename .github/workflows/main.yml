@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: laravel-app
 
 # =====================================================
-# 🔍 DETECT TERRAFORM CHANGES (PATH FILTER)
+#  DETECT TERRAFORM CHANGES (PATH FILTER)
 # =====================================================
 jobs:
   detect_changes:
@@ -30,7 +30,7 @@ jobs:
               - 'terraform/**'
 
 # =====================================================
-# 🧪 TEST STAGE
+#  TEST STAGE
 # =====================================================
   test:
     name: Laravel Tests
@@ -52,7 +52,7 @@ jobs:
       - run: php artisan test
 
 # =====================================================
-# 🌍 TERRAFORM PLAN (ALL ENVS)
+#  TERRAFORM PLAN (ALL ENVS)
 # =====================================================
   terraform-plan:
     name: Terraform Plan
@@ -98,7 +98,7 @@ jobs:
           path: terraform/tfplan
 
 # =====================================================
-# ✋ TERRAFORM APPLY (ONLY MAIN + PRODUCTION)
+#  TERRAFORM APPLY (ONLY MAIN + PRODUCTION)
 # =====================================================
   terraform-apply:
     name: Terraform Apply (Production)
@@ -145,7 +145,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - test
-      - terraform-apply
+     # - terraform-apply
     if: github.event_name == 'push'
 
     steps:
@@ -164,7 +164,7 @@ jobs:
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
 
 # =====================================================
-# 🚀 DEPLOY STAGE (EKS)
+#  DEPLOY STAGE (EKS)
 # =====================================================
   deploy:
     name: Deploy to EKS
