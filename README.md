@@ -17,7 +17,7 @@ The solution includes:
 * Containerization using **Docker**
 * Kubernetes deployment using **Helm**
 * **CI/CD pipeline** with test, build, and deploy stages
-* Public application exposure via AWS LoadBalancer
+* Public application exposure via AWS LoadBalancer 
 
 ---
 
