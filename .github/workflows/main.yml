@@ -105,7 +105,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-plan
     #if: github.event_name == 'push' && github.ref_name == 'main'
-
   
     # environment: production  #  Manual approval enabled
 
@@ -213,5 +212,4 @@ jobs:
              --create-namespace \
              --wait \
              --timeout 10m
- 
 
