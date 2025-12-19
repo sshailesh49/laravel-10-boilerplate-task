@@ -190,7 +190,7 @@ jobs:
         run: |
              aws eks update-kubeconfig \
              --region ${{ secrets.AWS_REGION }} \
-             --name innoscripta-eks
+             --name innoscripta-eks-dev
       - name: Install Helm
         run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
