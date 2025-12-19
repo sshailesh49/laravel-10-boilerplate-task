@@ -14,7 +14,7 @@ module "eks" {
  # manage_aws_auth_configmap = true
 
 
-  #    manage_aws_auth_configmap = true  
+  #    manage_aws_auth_configmap = true 
 
   eks_managed_node_groups = {
     default = {
