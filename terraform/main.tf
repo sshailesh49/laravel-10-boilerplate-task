@@ -1,5 +1,5 @@
 ####################
-# VPC MODULE
+#  VPC MODULE  
 ####################
 module "vpc" {
   source = "./modules/vpc"
@@ -9,7 +9,7 @@ module "vpc" {
 }
 
 ####################
-# EKS MODULE
+# EKS MODULE  1
 ####################
 module "eks" {
   source = "./modules/eks"
@@ -19,6 +19,8 @@ module "eks" {
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
+  
+  
 
   node_instance_types = var.node_instance_types
   node_desired_size   = var.node_desired_size

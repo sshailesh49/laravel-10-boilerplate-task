@@ -2,9 +2,10 @@
 <p align="center">
   <img src="flowdiagram.png" alt="AWS Architecture Diagram" width="900"/>
 </p>
-
-
 ## Overview
+=======
+The goal of this project is to serve as a boilerplate for Laravel  10  hii hii
+utilizing light-weight alpine linux images for nginx and php 8.2 (fp
 
 This repository contains a **production‑ready DevOps implementation** for the Laravel 10 boilerplate application provided in the Innoscripta DevOps case study.
 
