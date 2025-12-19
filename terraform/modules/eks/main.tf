@@ -8,13 +8,18 @@ module "eks" {
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
+
+  # manage_aws_auth_configmap = true
+
   eks_managed_node_groups = {
     default = {
-      desired_size = 2
-      min_size     = 1
-      max_size     = 3
+      desired_size = var.node_desired_size
+      min_size     = var.node_min_size
+      max_size     = var.node_max_size
 
-      instance_types = ["t3.medium"]
+      instance_types = var.node_instance_types
     }
   }
 }

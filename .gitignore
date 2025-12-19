@@ -24,3 +24,8 @@ yarn-error.log
 
 # misc
 .DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
