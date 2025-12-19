@@ -29,23 +29,40 @@ resource "aws_iam_user_policy_attachment" "ecr" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
 }
 
-resource "aws_iam_policy" "eks_admin_assume_role" {
-  name        = "eks-admin-assume-role"
-  description = "Allow assuming the EKSAdminRole"
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
 
-  policy = jsonencode({
+resource "aws_iam_role" "eks_admin_role" {
+  name = "EKSAdminRole"
+
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = "sts:AssumeRole"
-        Resource = "arn:aws:iam::750784683061:role/EKSAdminRole"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github_actions.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:AdityaPdev-eng/laravel-10-boilerplate-task:*"
+          }
+        }
       }
     ]
   })
 }
 
-resource "aws_iam_user_policy_attachment" "ram_eks_admin_assume" {
-  user       = "ram"
-  policy_arn = aws_iam_policy.eks_admin_assume_role.arn
+resource "aws_iam_role_policy_attachment" "eks_admin_full_access" {
+  role       = aws_iam_role.eks_admin_role.name
+  policy_arn = aws_iam_policy.eks_full_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "eks_admin_ecr" {
+  role       = aws_iam_role.eks_admin_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
 }
