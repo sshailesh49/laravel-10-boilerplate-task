@@ -1,49 +1,214 @@
-# Laravel 10 Boilerplate
+# Innoscripta DevOps–Laravel 10
+<p align="center">
+  <img src="flowdiagram.png" alt="AWS Architecture Diagram" width="900"/>
+</p>
 
 
-The goal of this project is to serve as a boilerplate for Laravel  10
-utilizing light-weight alpine linux images for nginx and php 8.2 (fpm).
+## Overview
 
-Stack:
+This repository contains a **production‑ready DevOps implementation** for the Laravel 10 boilerplate application provided in the Innoscripta DevOps case study.
 
-- app @ php:8.2-fpm-alpine
-- nginx @ nginx:alpine
-- mysql @ mysql
-- redis @ redis:alpine
-- worker-local @ php:8.2-alpine3.16
+The focus of this task is **infrastructure, deployment automation, and CI/CD best practices**, not application feature development.
 
-## TODO
+The solution includes:
 
-- add a basic, highly optional seeder for user
-- hook up worker-local so you have a queue to play with
-- create an example job/worker you might co-locate on same hardware
-- maybe add some ci/cd and even k8s stuff as an example to scale out workers/nginx/edges
+* Infrastructure as Code using **Terraform** (AWS VPC, EKS, IAM)
+* Containerization using **Docker**
+* Kubernetes deployment using **Helm**
+* **CI/CD pipeline** with test, build, and deploy stages
+* Public application exposure via AWS LoadBalancer
 
-## Notes
+---
 
-- docker/app docker/nginx will rely on supervisor to maintain their processes, yawn
-- Please see .env "#PORT FORWARDS" before starting in docker-compose
--
+## Infrastructure – Terraform
 
-## Installation
+Terraform is used to define AWS infrastructure in a **modular and reusable** manner.
 
-The default docker-compose config here exposes ports if you want them.  See .env's "PORT FORWARDS"
+### Terraform Structure
 
-```shell
-cp ./env.example ./.env
-docker-compose up --build -d app nginx mysql
-
-#docker-compose exec app php artisan migrate
+```
+terraform/
+├── main.tf
+├── provider.tf
+├── variables.tf
+├── outputs.tf
+├── versions.tf
+└── modules/
+    ├── vpc/
+    ├── eks/
+    └── iam/
 ```
 
-You can now access http://localhost:8022 (or whatever your FORWARD_NGINX_PORT is).
+### Terraform Modules
 
-Please keep ./composer.lock in docker/app container context, for example:
+* **VPC Module**
+  Creates the VPC, subnets, and networking components required for EKS.
 
-```shell
-docker-compose exec -u root app /bin/sh
-# then...
-# COMPOSER_MEMORY_LIMIT=-1 app composer install
-# COMPOSER_MEMORY_LIMIT=-1 app composer require awesome/package_etc
-# ymmv w/ COMPOSER_MEMORY_LIMIT maybe try without
+* **EKS Module**
+  Provisions an Amazon EKS cluster using private subnets.
+
+* **IAM Module**
+  Creates an IAM user with permissions limited to **EKS and ECR**, which is used by CI/CD for deployments.
+
+> Note: Creating actual AWS resources is optional as per the task instructions. The Terraform code is written as if a real EKS cluster and ECR repository exist.
+
+### Terraform Commands
+
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
 ```
+
+---
+
+## Docker Setup
+
+A Dockerfile is provided to build the Laravel application image.
+
+### Key Points
+
+* PHP 8.2 FPM (Alpine)
+* Required PHP extensions installed
+* Supervisor used to manage processes
+* Same image used for PHP‑FPM and worker containers
+
+### Build Image Locally
+
+```bash
+docker build -t laravel-app -f Docker/Dockerfile .
+```
+
+---
+
+## Local Development (docker‑compose)
+
+For local development, the application can be run using Docker Compose.
+
+```bash
+docker-compose up --build
+```
+
+This starts the Laravel application and required services for local testing.
+
+---
+
+## Kubernetes Deployment – Helm
+
+The application is deployed to Kubernetes using a Helm chart.
+
+### Helm Structure
+
+```
+helm/laravel-app/
+├── Chart.yaml
+├── values.yaml
+├── values-dev.yaml
+├── values-staging.yaml
+├── values-prod.yaml
+└── templates/
+    ├── deployment-php.yaml
+    ├── deployment-worker.yaml
+    ├── service.yaml
+    ├── configmap.yaml
+    ├── secret.yaml
+    └── ingress.yaml
+```
+
+### Deployments
+
+* **PHP‑FPM Deployment**
+  Handles web requests.
+
+* **Worker Deployment**
+  Executes background jobs using:
+
+  ```bash
+  php artisan queue:work
+  ```
+
+### Environment‑Specific Configuration
+
+Different environments are handled using separate values files:
+
+| Environment | Values File         |
+| ----------- | ------------------- |
+| Development | values-dev.yaml     |
+| Staging     | values-staging.yaml |
+| Production  | values-prod.yaml    |
+
+### Helm Validation (No Cluster Required)
+
+```bash
+helm template laravel helm/laravel-app \
+  -f helm/laravel-app/values-prod.yaml
+```
+
+---
+
+## Public Access
+
+The application is exposed publicly using a Kubernetes Service of type **LoadBalancer**.
+
+```yaml
+service:
+  type: LoadBalancer
+  port: 80
+```
+
+On AWS EKS, this automatically provisions a public Elastic Load Balancer.
+
+---
+
+## CI/CD Pipeline
+
+CI/CD is implemented using **GitHub Actions**.
+
+### Pipeline Stages
+
+1. **Test**
+   Runs when a Pull Request is opened against the `main` branch. If tests fail, the PR cannot be merged.
+
+2. **Build**
+   Builds the Docker image and pushes it to **DockerHub**.
+
+3. **Deploy**
+   Deploys the application to EKS using Helm (or validates using `helm template` when no cluster is available).
+
+### Branch‑Based Environments
+
+| Branch      | Environment |
+| ----------- | ----------- |
+| development | Development |
+| staging     | Staging     |
+| main        | Production  |
+
+### CI/CD Flow
+
+* PR opened to `main` → **Test stage runs**
+* Tests fail → Merge blocked
+* PR merged → Build and Deploy stages run
+
+---
+
+## IAM & Security
+
+* IAM user created with access limited to **EKS and ECR**
+* No secrets committed to the repository
+* Credentials managed using GitHub Actions Secrets
+
+> In a real production setup, least‑privilege IAM policies and OIDC‑based authentication would be preferred.
+
+---
+
+## Possible Improvements (Optional)
+
+* Docker image vulnerability scanning (Trivy)
+* Helm rollback strategies
+* HTTPS with Ingress and ACM
+* GitHub Actions OIDC instead of long‑lived IAM keys
+
+---
+
+**Thank you for reviewing this case study.**

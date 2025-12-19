@@ -1,3 +1,6 @@
+####################
+# VPC MODULE
+####################
 module "vpc" {
   source = "./modules/vpc"
 
@@ -5,6 +8,9 @@ module "vpc" {
   azs      = var.azs
 }
 
+####################
+# EKS MODULE
+####################
 module "eks" {
   source = "./modules/eks"
 
@@ -20,17 +26,25 @@ module "eks" {
   node_max_size       = var.node_max_size
 }
 
+####################
+# IAM MODULE
+####################
 module "iam" {
   source = "./modules/iam"
 }
 
+####################
+# EKS AUTH DATA
+####################
 data "aws_eks_cluster_auth" "this" {
   name = module.eks.cluster_name
 }
 
+####################
+# KUBERNETES PROVIDER
+####################
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   token                  = data.aws_eks_cluster_auth.this.token
 }
-
