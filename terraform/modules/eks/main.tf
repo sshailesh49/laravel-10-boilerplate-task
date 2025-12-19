@@ -10,8 +10,8 @@ module "eks" {
 
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = true
-
-  # manage_aws_auth_configmap = true
+  enable_irsa = true
+  manage_aws_auth_configmap = true
 
   eks_managed_node_groups = {
     default = {
